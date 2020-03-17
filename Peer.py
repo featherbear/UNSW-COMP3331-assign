@@ -13,6 +13,7 @@ class Peer:
         self.ping_interval = ping_interval
 
         self.__lastPing = 0
+        self.__pingInfo = {}
 
         self.__dprint(f"I am Peer #{self.__id}")
         threading.Thread(target=self.ping_server).start()
@@ -45,17 +46,27 @@ class Peer:
         while True:
             ctime = time.time()
                 
+            # Check if a new periodic ping is needed
             if ctime - self.__lastPing > 10:
                 self.__lastPing = ctime
                 for peerID in [self.first_successor, self.second_successor]:
                     c.sendto(str(self.__id).encode(), ('localhost', portUtils.calculate_UDP_port(peerID)))
+
                 self.__dprint(f"> Ping requests sent to Peers {self.first_successor} and {self.second_successor}")
 
             # Check for replies
-            if select([c], [], [], 10)[0]:
+            while select([c], [], [], 10)[0]:
                 (data, addr) = c.recvfrom(1024)
                 data = data.decode()
+                # data => peerID
+                self.__pingInfo[data] = time.time()
                 self.__dprint(f"> Ping response received from Peer {data}")
+
+            # Check if last response was more than 10 seconds
+            ctime = time.time()
+            for peerID in [self.first_successor, self.second_successor]:
+                if ctime - self.__pingInfo[data] > 10:
+                    self.__dprint(f"Peer {data} is no longer alive")
 
     @property
     def id():
