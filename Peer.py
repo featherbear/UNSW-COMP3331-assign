@@ -43,9 +43,6 @@ class Peer:
         conn.sendall(data)
         conn.close()
 
-    def ___sendUDP(self, peerID: int, data):
-        pass
-
     def ___closeTCP(self, conn: socket.socket) -> bool:
         if conn in self._connections:
             conn.close()
@@ -139,7 +136,6 @@ class Peer:
                     self.__dprint(f"> My new second successor is Peer {self.second_successor}")
 
     def ping_server(self):
-    # Respond to ping requests on UDP port `UDP_BASE_PORT + id`
         LISTEN_PORT = portUtils.calculate_port(self.id)
 
         self.__dprint(f"Listening for ping requests on UDP:{LISTEN_PORT}")
