@@ -1,5 +1,5 @@
-UDP_BASE_PORT = 12000
+BASE_PORT = 12000
 
-def calculate_UDP_port(offset: int) -> int:
-    return UDP_BASE_PORT + offset
+def calculate_port(offset: int) -> int:
+    return BASE_PORT + offset
 

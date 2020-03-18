@@ -2,6 +2,9 @@
 
 PING_INTERVAL = 30
 
+REPORTER = True
+REPORTER_INTERVAL = 1
+
 ###
 
 from Peer import Peer
@@ -17,14 +20,22 @@ nodes = [
     (19,  2,  4)
 ]
 
-nodes = [*map(lambda nodeInfo: Peer(*nodeInfo, PING_INTERVAL), nodes)]
+from Reporter import Reporter
+reporter = Reporter(REPORTER_INTERVAL)
 
-# from Reporter import Reporter
-# reporter = Reporter(5)
+def _setup(PEER: int, FIRST_SUCCESSOR: int, SECOND_SUCCESSOR: int, PING_INTERVAL: int):
+    peer = Peer(PEER, PING_INTERVAL)
+    peer.setup(FIRST_SUCCESSOR, SECOND_SUCCESSOR)
+    if REPORTER: reporter.register(peer)
+    return peer
+
+nodes = [*map(lambda nodeInfo: _setup(*nodeInfo, PING_INTERVAL), nodes)]
 
 print(nodes)
 
-# reporter.run()
+
 for node in nodes:
     node.ready()
 
+if REPORTER:
+    reporter.run()
