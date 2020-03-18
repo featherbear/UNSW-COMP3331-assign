@@ -19,7 +19,12 @@ nodes = [
 
 nodes = [*map(lambda nodeInfo: Peer(*nodeInfo, PING_INTERVAL), nodes)]
 
+# from Reporter import Reporter
+# reporter = Reporter(5)
+
 print(nodes)
 
+# reporter.run()
 for node in nodes:
     node.ready()
+
