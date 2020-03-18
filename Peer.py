@@ -127,6 +127,7 @@ class Peer:
                     self.__dprint("> Join request has been accepted")
                     self.__dprint(f"> My first successor is Peer {self.first_successor}")
                     self.__dprint(f"> My second successor is Peer {self.second_successor}")
+                    self.ready()
                     # self.isConnected = True
 
                 elif command == "secondsuccessor":
