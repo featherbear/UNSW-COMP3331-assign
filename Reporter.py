@@ -6,17 +6,18 @@ import threading
 
 
 class Reporter:
-    def __init__(self, refreshInterval):
+    def __init__(self, refreshInterval, suppressOutput = True):
 
         self.peers = []
         self.refreshInterval = refreshInterval
         self.__maxLength = 1
+        self.suppressOutput = suppressOutput
 
     def run(self):
         thread = threading.Thread(target=self.___run).start()
 
     def ___run(self):
-        sys.stdout = open(os.devnull, 'w')
+        if self.suppressOutput: sys.stdout = open(os.devnull, 'w')
 
         def __prettyConvert(truthyValue): return str(truthyValue).rjust(self.__maxLength) if truthyValue else "?"*self.__maxLength
 
@@ -50,7 +51,7 @@ class Reporter:
                 builder.append(f"\nUnmonitored Peers: {unmonitoredPeers}")
 
             builder.append("=============================")
-            os.system("clear")
+            if self.suppressOutput: os.system("clear")
             print("\n".join(builder), file=sys.__stdout__)
 
             time.sleep(self.refreshInterval)

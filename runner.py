@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 
-PING_INTERVAL = 30
+PING_INTERVAL = 3
 
-REPORTER = True
+REPORTER = False
 REPORTER_INTERVAL = 1
 
 ###
@@ -11,7 +11,7 @@ from Peer import Peer
 
 nodes = [
     # ID 1st 2nd
-    ( 2,  4,  5),
+    # ( 2,  4,  5),
     ( 4,  5,  8),
     ( 5,  8,  9),
     ( 8,  9, 14),
@@ -32,7 +32,6 @@ def _setup(PEER: int, FIRST_SUCCESSOR: int, SECOND_SUCCESSOR: int, PING_INTERVAL
 nodes = [*map(lambda nodeInfo: _setup(*nodeInfo, PING_INTERVAL), nodes)]
 
 print(nodes)
-
 
 for node in nodes:
     node.ready()
