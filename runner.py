@@ -38,3 +38,7 @@ for node in nodes:
 
 if REPORTER:
     reporter.run()
+
+import time
+while True:
+    time.sleep(0.1)

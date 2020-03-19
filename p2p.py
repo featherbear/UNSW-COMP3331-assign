@@ -31,7 +31,6 @@ if __name__ == "__main__":
     while getLine("> "):
         tokens = line.split(" ")
         command = tokens[0].lower()
-        print("GOT COMMAND,", line)
         if command == "store":
             if len(tokens) != 2:
                 print("Usage: Store <4-digit filename>")

@@ -46,9 +46,16 @@ class Peer:
 
     def ___closeTCP(self, conn: socket.socket) -> bool:
         if conn in self._connections:
+            metadata = self._connectionsMetadata.get(conn, False)
+            if metadata:
+                if "fileHandle" in metadata:
+                    metadata["fileHandle"].close()
+                del self._connectionsMetadata[conn]
+            
             conn.close()
             self._connections.remove(conn)
             return True
+
         return False
 
     def join(self, known_peer: int):
@@ -60,6 +67,7 @@ class Peer:
     def setup(self, first_successor: int, second_successor: int):
         self.first_successor = first_successor
         self.second_successor = second_successor
+        self.isConnected = True
 
     def ready(self):
         threading.Thread(target=self.ping_client).start()
@@ -85,7 +93,6 @@ class Peer:
                 
                 if not data:
                     # Close and remove dead connections
-                    print("CLOSE")
                     self.___closeTCP(readableSock)
                     continue
                 
@@ -144,7 +151,6 @@ class Peer:
                     self.__dprint(f"> My first successor is Peer {self.first_successor}")
                     self.__dprint(f"> My second successor is Peer {self.second_successor}")
                     self.ready()
-                    # self.isConnected = True
 
                 elif command == "secondsuccessor":
                     info = list(map(lambda b: b.decode(), info))
@@ -173,7 +179,6 @@ class Peer:
                     
                     f = open(f"received_{filename}.pdf", "wb")
 
-                    print(dataLength)
                     metadata = dict(
                         filename = filename,
                         fileHandle = f,
@@ -251,8 +256,11 @@ class Peer:
         _filename = int(filename)
         _hash = _filename % 256
 
-        
-        if self.id == _hash:
+        if any([
+            _hash == self.id,
+            self.predecessor and self.id < self.predecessor and (_hash > self.predecessor or _hash < self.id),
+            self.predecessor and _hash > self.predecessor and _hash < self.id
+        ]):
             self.__dprint(f"> Store {_filename} request accepted")
         else:
             self.__dprint(f"> Store {_filename} request forwarded to my successor")
@@ -271,15 +279,10 @@ class Peer:
 
         _requestor = int(requestor)
 
-        if self.predecessor is None:
-            # drop
-            print("DROP")
-            return
-
         if any([
             _hash == self.id,
-            self.id < self.predecessor and (_hash > self.predecessor or _hash < self.id),
-            _hash > self.predecessor and _hash < self.id
+            self.predecessor and self.id < self.predecessor and (_hash > self.predecessor or _hash < self.id),
+            self.predecessor and _hash > self.predecessor and _hash < self.id
         ]):
 
             self.__dprint(f"> File {filename} is stored here")
@@ -301,7 +304,7 @@ class Peer:
         with open(filename + ".pdf", "rb") as f:
             data = f.read()
             dataLength = len(data) # struct pack me?
-            print("data length", dataLength)
+
             self.___sendTCP(peerID, f"file|{self.id}|{filename}|{dataLength}|".encode() + data)
         self.__dprint("> The file has been sent")
 
