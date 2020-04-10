@@ -10,7 +10,7 @@ class Reporter:
 
         self.peers = []
         self.refreshInterval = refreshInterval
-        self.__maxLength = 1
+        self.__maxLength = 2 # Start with 2-width characters
         self.suppressOutput = suppressOutput
 
     def run(self):
@@ -30,7 +30,7 @@ class Reporter:
             
             for peer in self.peers:
                 _id = __prettyConvert(self._id_passthrough(peer.id))
-                
+
                 __first_predecessor = __prettyConvert(self._id_passthrough(peer.first_predecessor))
                 __second_predecessor = __prettyConvert(self._id_passthrough(peer.second_predecessor))
                 
@@ -46,6 +46,7 @@ class Reporter:
             
             peer_ids = [peer.id for peer in self.peers]
             for key in list(dict.fromkeys(successors)):
+                if key is None: continue
                 if key not in peer_ids:
                     unmonitoredPeers += 1
 

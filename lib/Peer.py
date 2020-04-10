@@ -115,7 +115,7 @@ class Peer:
                 command = info[0].decode().lower()
 
                 if command == "join":
-                    info = list(map(lambda b: b.decode(), info))
+                    info = [*map(lambda b: b.decode(), info)]
                     newPeerID = int(info[1])
                     if newPeerID in [self.id, self.first_successor, self.second_successor]:
                         # drop if new peer claims to be an existing peer
@@ -148,7 +148,7 @@ class Peer:
                             self.___sendTCP(self.first_successor, data)
 
                 elif command == "offer":
-                    info = list(map(lambda b: b.decode(), info))
+                    info = [*map(lambda b: b.decode(), info)]
                     self.setup(*map(int, info[1:]))
                     self.__dprint("> Join request has been accepted")
                     self.__dprint(f"> My first successor is Peer {self.first_successor}")
@@ -156,18 +156,18 @@ class Peer:
                     self.ready()
 
                 elif command == "secondsuccessor":
-                    info = list(map(lambda b: b.decode(), info))
+                    info = [*map(lambda b: b.decode(), info)]
                     self.second_successor = int(info[1])
                     self.__dprint(f"> Successor Change request received")
                     self.__dprint(f"> My new first successor is Peer {self.first_successor}")
                     self.__dprint(f"> My new second successor is Peer {self.second_successor}")
                 
                 elif command == "store":
-                    info = list(map(lambda b: b.decode(), info))
+                    info = [*map(lambda b: b.decode(), info)]
                     if len(info) == 3:
                         self.store(info[1], info[2])
                 elif command == "request":
-                    info = list(map(lambda b: b.decode(), info))
+                    info = [*map(lambda b: b.decode(), info)]
                     if len(info) == 3:
                         self.request(info[1], info[2])
                 elif command == "file":
@@ -190,7 +190,7 @@ class Peer:
                     metadata["bytesLeft"] -= f.write(data)
                     self._connectionsMetadata[readableSock] = metadata
                 elif command == "quit":
-                    info = list(map(lambda b: b.decode(), info))
+                    info = [*map(lambda b: b.decode(), info)]
                     peer, first_successor, second_successor = map(int,info[1:4])
 
                     self.__dprint(f"> Peer {peer} will depart from the network")
@@ -229,46 +229,82 @@ class Peer:
                     self.second_predecessor = int(info[0])
                 SHOW_PING_REQUEST and self.__dprint(
                     f"> Ping request message received from Peer {info[0]}")
-                server.sendto(str(self.id).encode(), addr)
+
+                string = f"{self.id}"
+                if self.first_successor: string += f"|{self.first_successor}"
+                if self.second_successor: string += f"|{self.second_successor}"
+                server.sendto(string.encode(), addr)
         
         server.close()
+
+    def __sendPing(self, *, peerID=None, ctime=None):
+        # stub.
+        # Gets overriden when ping_client spawns
+        raise NotImplementedError("STUB")
 
     def ping_client(self):
         c = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         c.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+        def sendPing(*, peerID=None, ctime=None):
+            if ctime is None:
+                ctime = time.time()
+            if peerID is None:
+                self.__lastPing = ctime
+            for peerID in [peerID] if peerID else [self.first_successor, self.second_successor]:
+                if peerID is not None:
+                    string = f"{self.id}"
+                    if self.first_successor: string += f"|{self.first_successor}"
+                    if self.second_successor: string += f"|{self.second_successor}"
+                    c.sendto(string.encode(), ('localhost', portUtils.calculate_port(peerID)))
+
+        self.__sendPing = sendPing
 
         while True:
 
             # Check if a new periodic ping is needed
             ctime = time.time()
             if ctime - self.__lastPing > 10:
-                self.__lastPing = ctime
-                for peerID in [self.first_successor, self.second_successor]:
-                    c.sendto(f"{self.id}|{self.first_successor}|{self.second_successor}".encode(
-                    ), ('localhost', portUtils.calculate_port(peerID)))
-
+                sendPing(ctime=ctime)
                 SHOW_PING_REQUEST and self.__dprint(
                     f"> Ping requests sent to Peers {self.first_successor} and {self.second_successor}")
 
             # Check for replies
             while select([c], [], [], 10)[0]:
                 (data, addr) = c.recvfrom(1024)
-                data = data.decode()
+                info = data.decode().split("|")
+                info = [*map(int, info)]
+
                 try:
-                    data = int(data)
-                    self.__pingInfo[data] = time.time()
-                    SHOW_PING_RESPONSE and self.__dprint(f"> Ping response received from Peer {data}")
+                    self.__pingInfo[info[0]] = time.time()
+                    SHOW_PING_RESPONSE and self.__dprint(f"> Ping response received from Peer {info[0]}")
+
+                    if info[0] == self.first_successor and self.second_successor is None:
+                        self.second_successor = info[1]
+                        
                 except:
                     pass
 
-            # Check if last response was more than 10 seconds
+            # Check if last response was a while ago
             ctime = time.time()
             for peerID in [self.first_successor, self.second_successor]:
+                if peerID is None:
+                    continue
                 if peerID not in self.__pingInfo: 
                     self.__pingInfo[peerID] = ctime
+                    continue
                 if ctime - self.__pingInfo[peerID] < min(max(20, self.ping_interval * 4), self.ping_interval * 4):
                     continue
+
                 self.__dprint(f"Peer {peerID} is no longer alive")
+                if peerID == self.first_successor:
+                    self.first_successor = self.second_successor
+                    self.second_successor = None
+                    self.__sendPing(peerID = self.first_successor)
+                else: # peerID == self.second_successor
+                    self.second_successor = None
+                    pass
+
 
     def store(self, filename, requestor=None):
         requestor = requestor or self.id
