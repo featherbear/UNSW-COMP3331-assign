@@ -324,6 +324,13 @@ class Peer:
             self.__dprint(f"> Store {_filename} request accepted")
         else:
             self.__dprint(f"> Store {_filename} request forwarded to my successor")
+
+            """ # This here will enable DHT shortcuts, but it is not asked within the assignment specifications """
+            # if hash > self.first_successor:
+            #     self.___sendTCP(self.second_successor, f"store|{_filename}|{requestor}".encode())
+            # else:
+            #     self.___sendTCP(self.first_successor, f"store|{_filename}|{requestor}".encode())
+            """ # END """
             self.___sendTCP(self.first_successor, f"store|{_filename}|{requestor}".encode())
 
     def request(self, filename, requestor=None):
@@ -358,6 +365,13 @@ class Peer:
                 self.__dprint(f"> File request for {filename} has been sent to my successor")
             else:
                 self.__dprint(f"> Request for File {filename} has been received, but the file is not stored here")
+
+            """ # This here will enable DHT shortcuts, but it is not asked within the assignment specifications """
+            # if hash > self.first_successor:
+            #     self.___sendTCP(self.second_successor, f"request|{filename}|{requestor}".encode())
+            # else:
+            #     self.___sendTCP(self.first_successor, f"request|{filename}|{requestor}".encode())
+            """ # END """
             self.___sendTCP(self.first_successor, f"request|{filename}|{requestor}".encode())
 
     def sendFile(self, peerID: int, filename: str):
