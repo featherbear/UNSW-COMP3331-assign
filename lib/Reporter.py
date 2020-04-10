@@ -30,7 +30,9 @@ class Reporter:
             
             for peer in self.peers:
                 _id = __prettyConvert(self._id_passthrough(peer.id))
-                _pre = __prettyConvert(self._id_passthrough(peer.predecessor))
+                
+                __first_predecessor = __prettyConvert(self._id_passthrough(peer.first_predecessor))
+                __second_predecessor = __prettyConvert(self._id_passthrough(peer.second_predecessor))
                 
                 __first_successor = self._id_passthrough(peer.first_successor)
                 successors.append(__first_successor)
@@ -40,7 +42,7 @@ class Reporter:
                 successors.append(__second_successor)
                 _second_successor = __prettyConvert(__second_successor)
 
-                builder.append(f"Peer {_id} - {_pre} > [{_id}] > {_first_successor} > {_second_successor}")
+                builder.append(f"Peer {_id} - {__second_predecessor} > {__first_predecessor} > [{_id}] > {_first_successor} > {_second_successor}")
             
             peer_ids = [peer.id for peer in self.peers]
             for key in list(dict.fromkeys(successors)):

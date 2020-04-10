@@ -19,7 +19,8 @@ class Peer:
 
         self.first_successor = None
         self.second_successor = None
-        self.predecessor = None
+        self.first_predecessor = None
+        self.second_predecessor = None
 
         self.ping_interval = ping_interval
 
@@ -132,8 +133,8 @@ class Peer:
                             
                             self.___sendTCP(newPeerID, f"offer|{self.first_successor}|{self.second_successor}".encode())
 
-                            if self.predecessor is not None:
-                                self.___sendTCP(self.predecessor, f"secondsuccessor|{newPeerID}".encode())
+                            if self.first_predecessor is not None:
+                                self.___sendTCP(self.first_predecessor, f"secondsuccessor|{newPeerID}".encode())
 
                             self.second_successor = self.first_successor
                             self.first_successor = newPeerID
@@ -199,12 +200,14 @@ class Peer:
         while True:
             (data, addr) = server.recvfrom(1024)
             info = data.decode().split("|")
-
             if len(info) > 1 and int(info[1]) == self.id:
-                # predecessor
-                if self.predecessor is None:
+                if self.first_predecessor is None:
                     self.__dprint("> Circular DHT established")
-                self.predecessor = int(info[0])
+                self.first_predecessor = int(info[0])
+            if len(info) > 2 and int(info[2]) == self.id:
+                if self.second_predecessor is None:
+                    self.__dprint("> Second predecessor determined")
+                self.second_predecessor = int(info[0])
             SHOW_PING_REQUEST and self.__dprint(
                 f"> Ping request message received from Peer {info[0]}")
             server.sendto(str(self.id).encode(), addr)
@@ -258,8 +261,8 @@ class Peer:
 
         if any([
             _hash == self.id,
-            self.predecessor and self.id < self.predecessor and (_hash > self.predecessor or _hash < self.id),
-            self.predecessor and _hash > self.predecessor and _hash < self.id
+            self.first_predecessor and self.id < self.first_predecessor and (_hash > self.first_predecessor or _hash < self.id),
+            self.first_predecessor and _hash > self.first_predecessor and _hash < self.id
         ]):
             self.__dprint(f"> Store {_filename} request accepted")
         else:
@@ -281,8 +284,8 @@ class Peer:
 
         if any([
             _hash == self.id,
-            self.predecessor and self.id < self.predecessor and (_hash > self.predecessor or _hash < self.id),
-            self.predecessor and _hash > self.predecessor and _hash < self.id
+            self.first_predecessor and self.id < self.first_predecessor and (_hash > self.first_predecessor or _hash < self.id),
+            self.first_predecessor and _hash > self.first_predecessor and _hash < self.id
         ]):
 
             self.__dprint(f"> File {filename} is stored here")
@@ -307,6 +310,8 @@ class Peer:
 
             self.___sendTCP(peerID, f"file|{self.id}|{filename}|{dataLength}|".encode() + data)
         self.__dprint("> The file has been sent")
+
+    # def quit(self):
 
     @property
     def id(self):
