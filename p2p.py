@@ -4,6 +4,8 @@ from lib.Peer import Peer
 from lib.argParser import _
 import sys
 
+import threading
+
 ID_SPACE = 256
 
 if __name__ == "__main__":
@@ -21,7 +23,7 @@ if __name__ == "__main__":
         p.setup(FIRST_SUCCESSOR, SECOND_SUCCESSOR)
         p.ready()
         print(p)
-
+    
     line = None
     def getLine(prompt: str) -> str:
         global line
@@ -36,10 +38,15 @@ if __name__ == "__main__":
                 print("Usage: Store <4-digit filename>")
                 continue
             p.store(tokens[1])
+            continue
 
         if command == "request":
             if len(tokens) != 2:
                 print("Usage: Request <4-digit filename>")
                 continue
             p.request(tokens[1])
-        
+            continue
+
+        if command == "quit":
+            p.quit()
+            sys.exit()

@@ -5,6 +5,7 @@ import threading
 import time
 from select import select
 import re
+import sys
 
 SHOW_PING_REQUEST = False
 SHOW_PING_RESPONSE = False
@@ -13,8 +14,6 @@ SHOW_PING_RESPONSE = False
 
 class Peer:
     def __init__(self, peer_id: int, ping_interval: int):
-        # first_successor: int, second_successor: int,
-
         self.__id = peer_id
 
         self.first_successor = None
@@ -33,9 +32,10 @@ class Peer:
         self._connectionsMetadata = {}
 
         self.__dprint(f"I am Peer #{self.id}")
-        threading.Thread(target=self.ping_server).start()
-        threading.Thread(target=self.server).start()
 
+        threading.Thread(target=self.__serverFn, daemon=True).start()
+        threading.Thread(target=self.__pingServerFn, daemon=True).start()
+        
     def __repr__(self):
         return f"(Peer[{self.id}]->{self.first_successor}->{self.second_successor})"
     
@@ -71,19 +71,21 @@ class Peer:
         self.isConnected = True
 
     def ready(self):
-        threading.Thread(target=self.ping_client).start()
+        threading.Thread(target=self.ping_client, daemon=True).start()
 
-    def server(self):
+    def __serverFn(self):
+        self.__serverRunning = True
         LISTEN_PORT = portUtils.calculate_port(self.id)
 
         self.__dprint(f"Listening for connections on TCP:{LISTEN_PORT}")
+        
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         server.bind(('', LISTEN_PORT))
         server.listen()
 
-        while True:
-            for readableSock in select([server, *self._connections], [], [])[0]:
+        while self.__serverRunning:
+            for readableSock in select([server, *self._connections], [], [], 1)[0]:
                 if readableSock is server:
                     (sock, addr) = server.accept()
                     self._connections.append(sock)
@@ -168,7 +170,6 @@ class Peer:
                     info = list(map(lambda b: b.decode(), info))
                     if len(info) == 3:
                         self.request(info[1], info[2])
-
                 elif command == "file":
                     _, peer, filename, dataLength, data = data.split(b"|", 4)
                     
@@ -188,29 +189,49 @@ class Peer:
 
                     metadata["bytesLeft"] -= f.write(data)
                     self._connectionsMetadata[readableSock] = metadata
+                elif command == "quit":
+                    info = list(map(lambda b: b.decode(), info))
+                    peer, first_successor, second_successor = map(int,info[1:4])
 
-    def ping_server(self):
+                    self.__dprint(f"> Peer {peer} will depart from the network")
+                    if peer == self.first_successor:
+                        self.first_successor = first_successor
+                        self.second_successor = second_successor
+                    elif peer == self.second_successor:
+                        self.second_successor = first_successor
+
+                    self.__dprint(f"My new first successor is Peer {self.first_successor}")
+                    self.__dprint(f"My new second successor is Peer {self.second_successor}")
+                    
+        server.close()
+
+    def __pingServerFn(self):
+        self.__pingServerRunning = True
+
         LISTEN_PORT = portUtils.calculate_port(self.id)
 
         self.__dprint(f"Listening for ping requests on UDP:{LISTEN_PORT}")
-        server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.___pingServer = server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         server.bind(('', LISTEN_PORT))
 
-        while True:
-            (data, addr) = server.recvfrom(1024)
-            info = data.decode().split("|")
-            if len(info) > 1 and int(info[1]) == self.id:
-                if self.first_predecessor is None:
-                    self.__dprint("> Circular DHT established")
-                self.first_predecessor = int(info[0])
-            if len(info) > 2 and int(info[2]) == self.id:
-                if self.second_predecessor is None:
-                    self.__dprint("> Second predecessor determined")
-                self.second_predecessor = int(info[0])
-            SHOW_PING_REQUEST and self.__dprint(
-                f"> Ping request message received from Peer {info[0]}")
-            server.sendto(str(self.id).encode(), addr)
+        while self.__pingServerRunning:
+            if select([server], [], [], 1)[0]:
+                (data, addr) = server.recvfrom(1024)
+                info = data.decode().split("|")
+                if len(info) > 1 and int(info[1]) == self.id:
+                    if self.first_predecessor is None:
+                        self.__dprint("> Circular DHT established")
+                    self.first_predecessor = int(info[0])
+                if len(info) > 2 and int(info[2]) == self.id:
+                    if self.second_predecessor is None:
+                        self.__dprint("> Second predecessor determined")
+                    self.second_predecessor = int(info[0])
+                SHOW_PING_REQUEST and self.__dprint(
+                    f"> Ping request message received from Peer {info[0]}")
+                server.sendto(str(self.id).encode(), addr)
+        
+        server.close()
 
     def ping_client(self):
         c = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -311,7 +332,14 @@ class Peer:
             self.___sendTCP(peerID, f"file|{self.id}|{filename}|{dataLength}|".encode() + data)
         self.__dprint("> The file has been sent")
 
-    # def quit(self):
+    def quit(self):
+        payload = f"quit|{self.id}|{self.first_successor}|{self.second_successor}".encode()
+
+        if self.first_predecessor is not None: self.___sendTCP(self.first_predecessor, payload)
+        if self.second_predecessor is not None: self.___sendTCP(self.second_predecessor, payload)
+        
+        self.__serverRunning = False
+        self.__pingServerRunning = False
 
     @property
     def id(self):
