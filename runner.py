@@ -7,11 +7,11 @@ REPORTER_INTERVAL = 1
 
 ###
 
-from Peer import Peer
+from lib.Peer import Peer
 
 nodes = [
     # ID 1st 2nd
-    # ( 2,  4,  5),
+    ( 2,  4,  5),
     ( 4,  5,  8),
     ( 5,  8,  9),
     ( 8,  9, 14),
@@ -20,7 +20,7 @@ nodes = [
     (19,  2,  4)
 ]
 
-from Reporter import Reporter
+from lib.Reporter import Reporter
 reporter = Reporter(REPORTER_INTERVAL)
 
 def _setup(PEER: int, FIRST_SUCCESSOR: int, SECOND_SUCCESSOR: int, PING_INTERVAL: int):

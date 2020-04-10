@@ -1,7 +1,7 @@
 #!/usr/bin/python3.7
 
-from Peer import Peer
-from argParser import _
+from lib.Peer import Peer
+from lib.argParser import _
 import sys
 
 ID_SPACE = 256

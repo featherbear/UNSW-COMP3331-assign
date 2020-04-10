@@ -1,4 +1,4 @@
-import portUtils
+from . import portUtils
 
 import socket
 import threading

@@ -1,4 +1,4 @@
-from Peer import Peer
+from .Peer import Peer
 import time
 import sys
 import os
