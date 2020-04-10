@@ -9,8 +9,7 @@ import sys
 
 SHOW_PING_REQUEST = False
 SHOW_PING_RESPONSE = False
-
-# TODO - Flags to check if the Peer is connected
+SHOW_CUSTOM_DEBUG = False
 
 class Peer:
     def __init__(self, peer_id: int, ping_interval: int):
@@ -31,7 +30,7 @@ class Peer:
         self._connections = []
         self._connectionsMetadata = {}
 
-        self.__dprint(f"I am Peer #{self.id}")
+        if SHOW_CUSTOM_DEBUG: self.__dprint(f"I am Peer #{self.id}")
 
         threading.Thread(target=self.__serverFn, daemon=True).start()
         threading.Thread(target=self.__pingServerFn, daemon=True).start()
@@ -77,7 +76,7 @@ class Peer:
         self.__serverRunning = True
         LISTEN_PORT = portUtils.calculate_port(self.id)
 
-        self.__dprint(f"Listening for connections on TCP:{LISTEN_PORT}")
+        if SHOW_CUSTOM_DEBUG: self.__dprint(f"Listening for connections on TCP:{LISTEN_PORT}")
         
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -119,13 +118,13 @@ class Peer:
                     newPeerID = int(info[1])
                     if newPeerID in [self.id, self.first_successor, self.second_successor]:
                         # drop if new peer claims to be an existing peer
-                        self.__dprint(f"> Peer {newPeerID} trying to join, but peer ID conflicts")
+                        if SHOW_CUSTOM_DEBUG: self.__dprint(f"> Peer {newPeerID} trying to join, but peer ID conflicts")
                         self.___closeTCP(readableSock)
                         continue
 
                     if newPeerID < self.id:
                         # drop if the new peer precedes the current peer
-                        self.__dprint(f"> Ignoring join request from Peer {newPeerID} - newPeerID < self.id")
+                        if SHOW_CUSTOM_DEBUG: self.__dprint(f"> Ignoring join request from Peer {newPeerID} - newPeerID < self.id")
                         self.___closeTCP(readableSock)
                         continue
 
@@ -210,7 +209,7 @@ class Peer:
 
         LISTEN_PORT = portUtils.calculate_port(self.id)
 
-        self.__dprint(f"Listening for ping requests on UDP:{LISTEN_PORT}")
+        if SHOW_CUSTOM_DEBUG: self.__dprint(f"Listening for ping requests on UDP:{LISTEN_PORT}")
         self.___pingServer = server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         server.bind(('', LISTEN_PORT))
@@ -221,11 +220,11 @@ class Peer:
                 info = data.decode().split("|")
                 if len(info) > 1 and int(info[1]) == self.id:
                     if self.first_predecessor is None:
-                        self.__dprint("> Circular DHT established")
+                        if SHOW_CUSTOM_DEBUG: self.__dprint("> Circular DHT established")
                     self.first_predecessor = int(info[0])
                 if len(info) > 2 and int(info[2]) == self.id:
                     if self.second_predecessor is None:
-                        self.__dprint("> Second predecessor determined")
+                        if SHOW_CUSTOM_DEBUG: self.__dprint("> Second predecessor determined")
                     self.second_predecessor = int(info[0])
                 SHOW_PING_REQUEST and self.__dprint(
                     f"> Ping request message received from Peer {info[0]}")
@@ -311,6 +310,7 @@ class Peer:
 
         # TODO: Possibly ^\d{4}$
         if not re.match("^\d{1,4}$", filename):
+            if SHOW_CUSTOM_DEBUG: self.__dprint("Invalid filename")
             return False
   
         _filename = int(filename)
@@ -338,7 +338,7 @@ class Peer:
 
         # TODO: Possibly ^\d{4}$
         if not re.match("^\d{1,4}$", filename):
-            print("NO MATCH")
+            if SHOW_CUSTOM_DEBUG: self.__dprint("Invalid filename")
             return False
   
         _filename = int(filename)
@@ -355,7 +355,6 @@ class Peer:
             self.__dprint(f"> File {filename} is stored here")
 
             if self.id == _requestor:
-                self.__dprint("Yeah well, i have it...")
                 return
 
             self.__dprint(f"> Sending file {filename} to Peer {_requestor}")

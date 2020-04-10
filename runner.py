@@ -31,11 +31,10 @@ def _setup(PEER: int, FIRST_SUCCESSOR: int, SECOND_SUCCESSOR: int, PING_INTERVAL
 
 nodes = [*map(lambda nodeInfo: _setup(*nodeInfo, PING_INTERVAL), nodes)]
 
-print(nodes)
+print("Launching nodes:", nodes)
 
 for node in nodes:
     node.ready()
-
 
 if REPORTER:
     reporter.run()
