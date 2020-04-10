@@ -2,7 +2,7 @@
 
 PING_INTERVAL = 3
 
-REPORTER = False
+import sys; REPORTER = "-r" in sys.argv
 REPORTER_INTERVAL = 1
 
 ###
@@ -35,6 +35,7 @@ print(nodes)
 
 for node in nodes:
     node.ready()
+
 
 if REPORTER:
     reporter.run()
