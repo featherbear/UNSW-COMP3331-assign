@@ -5,15 +5,14 @@ Author: Andrew Wong (z5206677) | GitHub: [featherbear/UNSW-COMP3331-assign](http
 ## Overview
 
 The assignment involved designing a networked P2P program that implements a basic Distributed Hash Table.  
-This involves Peer Initialisation, Peer Pinging, Peer Management, Data Insertion and Data Retrieval.
 
-To facilitate the development of my approach to the assignment, I have created several helper files and tools, which have been explained below. The assignment specifications were unclear and vague in areas - at times contradicting itself. This made the implementation of the assignment confusing.
+To facilitate the development of my approach to the assignment, I have created several helper files and tools, which have been explained below. The assignment specifications were unclear and vague in many, many areas (even the marking rubric) - at times contradicting itself. This made the implementation of the assignment confusing.
 
 ## Breakdown
 
 ### `runner.py`
 
-The `runner.py` file is a wrapper around the Peer initialisation functionality, spawning peers in a programmatic manner.  
+The `runner.py` file is a wrapper around the Peer initialisation functionality, spawning peers in a programmatic manner. with a default ping interval of 3 seconds.  
 
 **Example when Peer 15 joins**
 
@@ -38,7 +37,6 @@ Launching nodes:
 [9] > My new first successor is Peer 14
 [9] > My new second successor is Peer 15
 ```
-
 
 Its 'Reporter mode' (when launched with `runner.py -r`) periodically checks for the predecessors and successors of each peer, to make it easy to identify the relationships between peers; especially as peers come online and offline.
 
@@ -101,7 +99,8 @@ The `__sendPing` method is exposed to the `Peer` class instance when this thread
 
 To send/receive files, the hash of the file (_modulo 256_) is determined, and the closest successor for that hash is located by passing the requestor and the filename around the network. In the case of requesting for a file, the sender will send the length of the file, a well as the contents; so the receiver knows how many bytes of incoming stream is for the file.
 
-During data transfer, a structure is created in `_connectionsMetadata` to pass data between reads.
+\- For store requests, **a blank dummy file is created**.  
+\- For retrieve requests, **the file must exist**; and no dummy file will be created to then be transmitted.  
 
 ### `lib/portUtils.py`
 
@@ -109,7 +108,7 @@ The `portUtils.py` file contains helper/utility functions to perform port-relate
 
 ### `lib/Reporter.py`
 
-The `Reporter.py` file contains the `Reporter` class, which is used in the `runner.py` Reporter mode to inspect the state of each peer
+The `Reporter.py` file contains the `Reporter` class, which is used in the `runner.py` reporter mode to inspect the state of each peer
 
 ## Improvements
 
