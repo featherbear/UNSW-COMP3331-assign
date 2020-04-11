@@ -165,10 +165,12 @@ class Peer:
                     info = [*map(lambda b: b.decode(), info)]
                     if len(info) == 3:
                         self.store(info[1], info[2])
+
                 elif command == "request":
                     info = [*map(lambda b: b.decode(), info)]
                     if len(info) == 3:
                         self.request(info[1], info[2])
+
                 elif command == "file":
                     _, peer, filename, dataLength, data = data.split(b"|", 4)
                     
@@ -188,6 +190,7 @@ class Peer:
 
                     metadata["bytesLeft"] -= f.write(data)
                     self._connectionsMetadata[readableSock] = metadata
+
                 elif command == "quit":
                     info = [*map(lambda b: b.decode(), info)]
                     peer, first_successor, second_successor = map(int,info[1:4])
@@ -238,7 +241,7 @@ class Peer:
 
     def __sendPing(self, *, peerID=None, ctime=None):
         # stub.
-        # Gets overriden when ping_client spawns
+        # Gets overridden when ping_client spawns
         raise NotImplementedError("STUB")
 
     def ping_client(self):
@@ -308,7 +311,7 @@ class Peer:
     def store(self, filename, requestor=None):
         requestor = requestor or self.id
 
-        # TODO: Possibly ^\d{4}$
+        # FIXME: Possibly ^\d{4}$
         if not re.match("^\d{1,4}$", filename):
             if SHOW_CUSTOM_DEBUG: self.__dprint("Invalid filename")
             return False
@@ -337,7 +340,7 @@ class Peer:
     def request(self, filename, requestor=None):
         requestor = requestor or self.id
 
-        # TODO: Possibly ^\d{4}$
+        # FIXME: Possibly ^\d{4}$
         if not re.match("^\d{1,4}$", filename):
             if SHOW_CUSTOM_DEBUG: self.__dprint("Invalid filename")
             return False
