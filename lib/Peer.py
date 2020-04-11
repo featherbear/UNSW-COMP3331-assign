@@ -6,6 +6,7 @@ import time
 from select import select
 import re
 import sys
+import os.path
 
 SHOW_PING_REQUEST = True
 SHOW_PING_RESPONSE = True
@@ -508,11 +509,20 @@ class Peer:
     [filename].pdf MUST exist
     """
     def sendFile(self, peerID: int, filename: str):
-        with open(filename + ".pdf", "rb") as f:
+        path = filename + ".pdf"
+        
+        # Abort if the file does not exist
+        if not os.path.exists(path) or not os.path.isfile(path):
+            self.__dprint(f"> The physical file at {path} was requested, but does not exist or is an invalid file!")
+            return
+
+        # Read and send the file
+        with open(path, "rb") as f:
             data = f.read()
             dataLength = len(data) # struct pack me?
 
             self.___sendTCP(peerID, f"file|{self.id}|{filename}|{dataLength}|".encode() + data)
+            
         self.__dprint("> The file has been sent")
 
     """
