@@ -398,5 +398,6 @@ class Peer:
     def id(self):
         return self.__id
 
+    # Override me!
     def __dprint(self, *args, **kwargs):
-        print(f"[{self.id}]", *args, **kwargs)
+        print(*args, **kwargs)

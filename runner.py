@@ -2,42 +2,42 @@
 
 PING_INTERVAL = 3
 
-import sys; REPORTER = "-r" in sys.argv
 REPORTER_INTERVAL = 1
-
-###
-
-from lib.Peer import Peer
 
 nodes = [
     # ID 1st 2nd
     ( 2,  4,  5),
     ( 4,  5,  8),
     ( 5,  8,  9),
-    ( 8,  9, 14),
+    # ( 8,  9, 14),
     ( 9, 14, 19),
     (14, 19,  2),
     (19,  2,  4)
 ]
 
-from lib.Reporter import Reporter
-reporter = Reporter(REPORTER_INTERVAL)
+###
+
+import sys; REPORTER = "-r" in sys.argv
+from lib.Peer import Peer
+
+if REPORTER:
+    from lib.Reporter import Reporter
+    reporter = Reporter(REPORTER_INTERVAL)
 
 def _setup(PEER: int, FIRST_SUCCESSOR: int, SECOND_SUCCESSOR: int, PING_INTERVAL: int):
     peer = Peer(PEER, PING_INTERVAL)
     peer.setup(FIRST_SUCCESSOR, SECOND_SUCCESSOR)
     if REPORTER: reporter.register(peer)
+    peer._Peer__dprint = lambda *args, **kwargs: print(f"[{peer.id}]", *args, **kwargs)
     return peer
 
 nodes = [*map(lambda nodeInfo: _setup(*nodeInfo, PING_INTERVAL), nodes)]
 
-print("Launching nodes:", nodes)
+print("Launching nodes:", "".join([f"\n■ {n}" for n in nodes]), "\n")
 
-for node in nodes:
-    node.ready()
+for node in nodes: node.ready()
 
-if REPORTER:
-    reporter.run()
+if REPORTER: reporter.run()
 
 import time
 while True:
