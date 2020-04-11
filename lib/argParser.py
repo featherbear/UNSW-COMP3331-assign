@@ -1,6 +1,10 @@
 import sys
 
 def _(ID_SPACE):  # Argument parser
+
+    """
+    Parse arguments for the join commands
+    """
     def _JOIN():
         try:
             PEER, KNOWN_PEER, PING_INTERVAL = sys.argv[2:]
@@ -19,6 +23,9 @@ def _(ID_SPACE):  # Argument parser
         except:
             print(f"Usage: {sys.argv[0]} join <PEER> <KNOWN_PEER> <PING_INTERVAL>")
 
+    """
+    Parse arguments for the init command 
+    """
     def _INIT():
         try:
             PEER, FIRST_SUCCESSOR, SECOND_SUCCESSOR, PING_INTERVAL = sys.argv[2:]
@@ -40,6 +47,9 @@ def _(ID_SPACE):  # Argument parser
             print(
                 f"Usage: {sys.argv[0]} <TYPE> <PEER> <FIRST_SUCCESSOR> <SECOND_SUCCESSOR> <PING_INTERVAL>")
 
+    """
+    Check for command type
+    """
     TYPE = None
     def _TYPE_CHECK():
         nonlocal TYPE

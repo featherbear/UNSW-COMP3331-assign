@@ -5,6 +5,9 @@ import os
 import threading
 
 
+"""
+Reporter class to provide an overview report of the predecessors and successors of monitored peers.
+"""
 class Reporter:
     def __init__(self, refreshInterval, suppressOutput = True):
 
@@ -16,9 +19,13 @@ class Reporter:
     def run(self):
         thread = threading.Thread(target=self.___run).start()
 
+    """
+    Thread function
+    """
     def ___run(self):
         if self.suppressOutput: sys.stdout = open(os.devnull, 'w')
 
+        # Pad text to be nicely formatted
         def __prettyConvert(truthyValue): return str(truthyValue).rjust(self.__maxLength) if truthyValue else "?"*self.__maxLength
 
         while True:
@@ -29,6 +36,8 @@ class Reporter:
             successors = []
             
             for peer in self.peers:
+                # Get IDs and format as prettified text
+
                 _id = __prettyConvert(self._id_passthrough(peer.id))
 
                 __first_predecessor = __prettyConvert(self._id_passthrough(peer.first_predecessor))
@@ -44,6 +53,7 @@ class Reporter:
 
                 builder.append(f"Peer {_id} - {__second_predecessor} > {__first_predecessor} > [{_id}] > {_first_successor} > {_second_successor}")
             
+            # Check for peers that are not monitored, but were referenced by other peers
             peer_ids = [peer.id for peer in self.peers]
             for key in list(dict.fromkeys(successors)):
                 if key is None: continue
@@ -59,6 +69,9 @@ class Reporter:
 
             time.sleep(self.refreshInterval)
 
+    """ 
+    Helper function to the ID prettifier
+    """
     def _id_passthrough(self, value: int):
         if type(value) not in [int, str]:
             return value
@@ -67,7 +80,10 @@ class Reporter:
         if checkLen > self.__maxLength:
             self.__maxLength = checkLen
         return value
-        
+
+    """
+    Register a peer to be monitored
+    """    
     def register(self, peer: Peer):
         if peer not in self.peers:
             self.peers.append(peer)
