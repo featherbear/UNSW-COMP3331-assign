@@ -23,6 +23,7 @@ class Peer:
         self.ping_interval = ping_interval
 
         self.isConnected = False
+        self.___readyCallback = None
 
         self.__lastPing = 0
         self.__pingInfo = {}
@@ -58,19 +59,28 @@ class Peer:
 
         return False
 
-    def join(self, known_peer: int):
+    def join(self, known_peer: int, *, callback = None):
         if self.isConnected:
             return False
+        
+        if callback is not None:
+            self.___readyCallback = callback
 
         self.___sendTCP(known_peer, f"join|{self.id}".encode())
 
-    def setup(self, first_successor: int, second_successor: int):
+    def setup(self, first_successor: int, second_successor: int, *, callback = None):
+        if callback is not None:
+            self.___readyCallback = callback
+
         self.first_successor = first_successor
         self.second_successor = second_successor
         self.isConnected = True
 
     def ready(self):
         threading.Thread(target=self.__pingClientFn, daemon=True).start()
+        if self.___readyCallback is not None:
+            self.___readyCallback(self)
+            self.___readyCallback = None
 
     def __serverFn(self):
         self.__serverRunning = True
@@ -152,6 +162,7 @@ class Peer:
                     self.__dprint("> Join request has been accepted")
                     self.__dprint(f"> My first successor is Peer {self.first_successor}")
                     self.__dprint(f"> My second successor is Peer {self.second_successor}")
+                    self.isConnected = True
                     self.ready()
 
                 elif command == "secondsuccessor":
