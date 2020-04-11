@@ -15,14 +15,14 @@ if __name__ == "__main__":
         PEER, KNOWN_PEER, PING_INTERVAL = args[1:]
         p = Peer(PEER, PING_INTERVAL)
         p.join(KNOWN_PEER)
-        print(p)
         
     elif args[0] == "init":
         PEER, FIRST_SUCCESSOR, SECOND_SUCCESSOR, PING_INTERVAL = args[1:]
         p = Peer(PEER, PING_INTERVAL)
         p.setup(FIRST_SUCCESSOR, SECOND_SUCCESSOR)
         p.ready()
-        print(p)
+        
+    print("Launched peer:", p)
     
     line = None
     def getLine(prompt: str) -> str:
