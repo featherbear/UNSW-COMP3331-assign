@@ -322,6 +322,7 @@ class Peer:
             self.first_predecessor and _hash > self.first_predecessor and _hash < self.id
         ]):
             self.__dprint(f"> Store {_filename} request accepted")
+            open(f"{_filename}.pdf", "w").close()
         else:
             self.__dprint(f"> Store {_filename} request forwarded to my successor")
 
