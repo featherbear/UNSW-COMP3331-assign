@@ -23,9 +23,9 @@ class Reporter:
 
         while True:
             builder = []
-            builder.append("=============================")
+            builder.append("==================================")
 
-            unmonitoredPeers = 0
+            unmonitoredPeers = []
             successors = []
             
             for peer in self.peers:
@@ -48,12 +48,12 @@ class Reporter:
             for key in list(dict.fromkeys(successors)):
                 if key is None: continue
                 if key not in peer_ids:
-                    unmonitoredPeers += 1
+                    unmonitoredPeers.append(key)
 
-            if unmonitoredPeers > 0:
-                builder.append(f"\nUnmonitored Peers: {unmonitoredPeers}")
+            if len(unmonitoredPeers) > 0:
+                builder.append(f"\nUnmonitored Peers ({len(unmonitoredPeers)}): {', '.join(map(str,sorted(unmonitoredPeers)))}")
 
-            builder.append("=============================")
+            builder.append("==================================")
             if self.suppressOutput: os.system("clear")
             print("\n".join(builder), file=sys.__stdout__)
 
