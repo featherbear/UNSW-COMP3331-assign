@@ -37,7 +37,7 @@ class Peer:
         threading.Thread(target=self.__pingServerFn, daemon=True).start()
         
     def __repr__(self):
-        return f"(Peer[{self.id}]->{self.first_successor}->{self.second_successor})"
+        return f"<Peer[{self.id}]->{self.first_successor}->{self.second_successor}>"
     
     def ___sendTCP(self, peerID: int, data):
         conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
