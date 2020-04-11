@@ -70,7 +70,7 @@ class Peer:
         self.isConnected = True
 
     def ready(self):
-        threading.Thread(target=self.ping_client, daemon=True).start()
+        threading.Thread(target=self.__pingClientFn, daemon=True).start()
 
     def __serverFn(self):
         self.__serverRunning = True
@@ -241,10 +241,10 @@ class Peer:
 
     def __sendPing(self, *, peerID=None, ctime=None):
         # stub.
-        # Gets overridden when ping_client spawns
+        # Gets overridden when __pingClientFn spawns
         raise NotImplementedError("STUB")
 
-    def ping_client(self):
+    def __pingClientFn(self):
         c = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         c.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
