@@ -153,7 +153,7 @@ class Peer:
                             self.__dprint(f"> My second successor is Peer {self.second_successor}")
 
                         else:
-                            self.__dprint(f"Peer {newPeerID} Join request forwarded to my successor")
+                            self.__dprint(f"> Peer {newPeerID} Join request forwarded to my successor")
                             self.___sendTCP(self.first_successor, data)
 
                 elif command == "offer":
@@ -309,14 +309,17 @@ class Peer:
                 if ctime - self.__pingInfo[peerID] < min(max(20, self.ping_interval * 4), self.ping_interval * 4):
                     continue
 
-                self.__dprint(f"Peer {peerID} is no longer alive")
+                self.__dprint(f"> Peer {peerID} is no longer alive")
+
+                # NOTE: DO NOT REFACTOR - It is clearer to leave like this
                 if peerID == self.first_successor:
                     self.first_successor = self.second_successor
                     self.second_successor = None
                     self.__sendPing(peerID = self.first_successor)
                 else: # peerID == self.second_successor
                     self.second_successor = None
-                    pass
+                    self.__sendPing(peerID = self.first_successor)
+
 
 
     def store(self, filename, requestor=None):
@@ -324,7 +327,7 @@ class Peer:
 
         # FIXME: Possibly ^\d{4}$
         if not re.match("^\d{1,4}$", filename):
-            if SHOW_CUSTOM_DEBUG: self.__dprint("Invalid filename")
+            if SHOW_CUSTOM_DEBUG: self.__dprint("> Invalid filename '{filename}'")
             return False
   
         _filename = int(filename)
@@ -353,7 +356,7 @@ class Peer:
 
         # FIXME: Possibly ^\d{4}$
         if not re.match("^\d{1,4}$", filename):
-            if SHOW_CUSTOM_DEBUG: self.__dprint("Invalid filename")
+            if SHOW_CUSTOM_DEBUG: self.__dprint("> Invalid filename '{filename}'")
             return False
   
         _filename = int(filename)
