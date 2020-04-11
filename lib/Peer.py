@@ -153,8 +153,15 @@ class Peer:
                             self.__dprint(f"> My second successor is Peer {self.second_successor}")
 
                         else:
-                            self.__dprint(f"> Peer {newPeerID} Join request forwarded to my successor")
+                            """ # This block will enable DHT shortcuts, but is disabled as it will violate assignment specifications """
+                            # if newPeerID > self.first_successor:
+                            #     self.___sendTCP(self.second_successor, data)
+                            # else:
+                            #    self.___sendTCP(self.first_successor, data)
+                            """ # END """
+
                             self.___sendTCP(self.first_successor, data)
+                            self.__dprint(f"> Peer {newPeerID} Join request forwarded to my successor")
 
                 elif command == "offer":
                     info = [*map(lambda b: b.decode(), info)]
@@ -277,7 +284,7 @@ class Peer:
 
             # Check if a new periodic ping is needed
             ctime = time.time()
-            if ctime - self.__lastPing > 10:
+            if ctime - self.__lastPing > self.ping_interval:
                 sendPing(ctime=ctime)
                 SHOW_PING_REQUEST and self.__dprint(
                     f"> Ping requests sent to Peers {self.first_successor} and {self.second_successor}")
@@ -306,7 +313,8 @@ class Peer:
                 if peerID not in self.__pingInfo: 
                     self.__pingInfo[peerID] = ctime
                     continue
-                if ctime - self.__pingInfo[peerID] < min(max(20, self.ping_interval * 4), self.ping_interval * 4):
+                if ctime - self.__pingInfo[peerID] < min(max(20, self.ping_interval * 4), 60):
+                    # Allow at least 20 seconds, at most 60 seconds
                     continue
 
                 self.__dprint(f"> Peer {peerID} is no longer alive")
@@ -343,7 +351,7 @@ class Peer:
         else:
             self.__dprint(f"> Store {_filename} request forwarded to my successor")
 
-            """ # This here will enable DHT shortcuts, but it is not asked within the assignment specifications """
+            """ # This block will enable DHT shortcuts, but is disabled as it will violate assignment specifications """
             # if hash > self.first_successor:
             #     self.___sendTCP(self.second_successor, f"store|{_filename}|{requestor}".encode())
             # else:
@@ -383,7 +391,7 @@ class Peer:
             else:
                 self.__dprint(f"> Request for File {filename} has been received, but the file is not stored here")
 
-            """ # This here will enable DHT shortcuts, but it is not asked within the assignment specifications """
+            """ # This block will enable DHT shortcuts, but is disabled as it will violate assignment specifications """
             # if hash > self.first_successor:
             #     self.___sendTCP(self.second_successor, f"request|{filename}|{requestor}".encode())
             # else:
