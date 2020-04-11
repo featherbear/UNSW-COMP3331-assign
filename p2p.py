@@ -57,5 +57,8 @@ if __name__ == "__main__":
             continue
 
         if command == "quit":
+            if p.first_predecessor is None or p.second_predecessor:
+                print("Circular DHT was not fully established. Perhaps the predecessors haven't pinged you yet?")
+                print("Disconnect message NOT sent")
             p.quit()
             sys.exit()

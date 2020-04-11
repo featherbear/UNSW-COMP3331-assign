@@ -7,8 +7,8 @@ from select import select
 import re
 import sys
 
-SHOW_PING_REQUEST = False
-SHOW_PING_RESPONSE = False
+SHOW_PING_REQUEST = True
+SHOW_PING_RESPONSE = True
 SHOW_CUSTOM_DEBUG = False
 
 class Peer:
@@ -197,6 +197,7 @@ class Peer:
                     dataLength = int(dataLength.decode())
                     
                     self.__dprint(f"> Peer {peer} had File {filename}")
+                    self.__dprint(f"> Receiving File {filename} from Peer {peer}")
                     
                     f = open(f"received_{filename}.pdf", "wb")
 
@@ -219,9 +220,11 @@ class Peer:
                         self.second_successor = second_successor
                     elif peer == self.second_successor:
                         self.second_successor = first_successor
+                    
+                    self.__sendPing(peerID = self.first_successor)
 
-                    self.__dprint(f"My new first successor is Peer {self.first_successor}")
-                    self.__dprint(f"My new second successor is Peer {self.second_successor}")
+                    self.__dprint(f"> My new first successor is Peer {self.first_successor}")
+                    self.__dprint(f"> My new second successor is Peer {self.second_successor}")
                     
         server.close()
 
@@ -286,8 +289,10 @@ class Peer:
             ctime = time.time()
             if ctime - self.__lastPing > self.ping_interval:
                 sendPing(ctime=ctime)
-                SHOW_PING_REQUEST and self.__dprint(
-                    f"> Ping requests sent to Peers {self.first_successor} and {self.second_successor}")
+                if SHOW_PING_REQUEST:
+                    pingList = [s for s in [self.first_successor, self.second_successor] if s is not None]
+                    if len(pingList) > 0:
+                        self.__dprint(f"> Ping requests sent to Peer{'s' if len(pingList) == 2 else ''} {' and '.join(map(str, pingList))}")
 
             # Check for replies
             while select([c], [], [], 10)[0]:
